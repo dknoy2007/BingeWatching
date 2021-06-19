@@ -57,7 +57,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             {
                 var randomContent = _netflix.GetRandomContent(kind);
 
-                if (randomContent != null && !_repository.UserContentExists(randomContent.Id))
+                if (randomContent != null && !_repository.IsUserContentExists(randomContent.Id))
                 {
                     return randomContent;
                 }
@@ -130,7 +130,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
 
         private void HandleMovieRecommendation()
         {
-            var followedUserIds = _repository.GetFollowedUsers();
+            var followedUserIds = _repository.GetUsersFollowedByCurrentUser();
 
             if (!followedUserIds.Any())
             {
@@ -138,7 +138,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
                 return;
             }
 
-            var recommendedMovie = _repository.GetMovieRecommendation(followedUserIds);
+            var recommendedMovie = _repository.GetRecommendedMovieFromFollowedUsers(followedUserIds);
 
             if (recommendedMovie == null)
             {

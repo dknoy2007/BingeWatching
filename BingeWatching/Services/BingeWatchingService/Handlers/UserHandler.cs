@@ -25,7 +25,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
                     continue;
                 }
 
-                var status = _repository.GetOrCreateUser(userId);
+                var status = _repository.SetOrCreateCurrentUser(userId);
 
                 if (status)
                 {

@@ -7,17 +7,17 @@ namespace BingeWatching.Repository.Interfaces
     public interface IBingeWatchingRepository
     {
         public int CurrentUserId { get; }
-        bool GetOrCreateUser(int userId);
+        bool SetOrCreateCurrentUser(int userId);
         void AddContent(Content content);
-        bool UserContentExists(string contentId);
+        bool IsUserContentExists(string contentId);
         List<Content> GetContentHistory();
         void UpdateContentRank(string contentId, int rank);
-        void Follow(int userId);
-        bool IsFollowing(int userId);
-        void UnFollow(int userId);
-        List<int> GetFollowers();
-        Tuple<int, Content> GetMovieRecommendation(List<int> followedUserIds);
-        bool UserExists(int userId);
-        List<int> GetFollowedUsers();
+        void FollowUser(int userId);
+        bool IsFollowingUser(int userId);
+        void UnFollowUser(int userId);
+        List<int> GetCurrentUserFollowers();
+        Tuple<int, Content> GetRecommendedMovieFromFollowedUsers(List<int> followedUserIds);
+        bool IsUserExists(int userId);
+        List<int> GetUsersFollowedByCurrentUser();
     }
 }

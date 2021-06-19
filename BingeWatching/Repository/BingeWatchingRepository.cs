@@ -24,9 +24,9 @@ namespace BingeWatching.Repository
 
         public int CurrentUserId { get; private set; }
 
-        public bool GetOrCreateUser(int userId)
+        public bool SetOrCreateCurrentUser(int userId)
         {
-            if (!UserExists(userId))
+            if (!IsUserExists(userId))
             {
                 _users.Add(userId, new Dictionary<string, Content>());
             }
@@ -41,7 +41,7 @@ namespace BingeWatching.Repository
             _users[CurrentUserId].Add(content.Id, content);
         }
 
-        public bool UserContentExists(string contentId)
+        public bool IsUserContentExists(string contentId)
         {
             return _users[CurrentUserId].ContainsKey(contentId);
         }
@@ -58,7 +58,7 @@ namespace BingeWatching.Repository
             _users[CurrentUserId][contentId].Rank = rank;
         }
 
-        public void Follow(int userId)
+        public void FollowUser(int userId)
         {
             if (!_followers.ContainsKey(userId))
             {
@@ -70,42 +70,24 @@ namespace BingeWatching.Repository
             }
         }
 
-        public void UnFollow(int userId)
+        public void UnFollowUser(int userId)
         {
             _followers[userId].Remove(CurrentUserId);
         }
 
-        public bool IsFollowing(int userId)
+        public bool IsFollowingUser(int userId)
         {
             return _followers.ContainsKey(userId) && _followers[userId].Contains(CurrentUserId);
         }
 
-        public List<int> GetFollowers()
+        public List<int> GetCurrentUserFollowers()
         {
             return _followers.ContainsKey(CurrentUserId) 
                 ? _followers[CurrentUserId] 
                 : null;
         }
 
-        public Tuple<int, Content> GetMovieRecommendation(List<int> followedUserIds)
-        {
-            return GetFollowedUsersMovieRecommendation(followedUserIds);
-        }
-
-        public bool UserExists(int userId)
-        {
-            return _users.ContainsKey(userId);
-        }
-
-        public List<int> GetFollowedUsers()
-        {
-            return _followers
-                .Where(x => x.Value.Contains(CurrentUserId))
-                .Select(x => x.Key)
-                .ToList();
-        }
-
-        private Tuple<int, Content> GetFollowedUsersMovieRecommendation(List<int> followedUserIds)
+        public Tuple<int, Content> GetRecommendedMovieFromFollowedUsers(List<int> followedUserIds)
         {
             var recommendedMovie = GetFollowedUsersTopRankedMovie(followedUserIds);
 
@@ -120,14 +102,27 @@ namespace BingeWatching.Repository
             }
 
             _recommendations[CurrentUserId].Add(recommendedMovie.Item2.Id);
-            
+
             // we treat recommendation as if the current user is watching it, so it is added to its already watched content list
             AddContent(recommendedMovie.Item2);
 
             return recommendedMovie;
         }
 
-        private Tuple<int, Content> GetFollowedUsersTopRankedMovie(List<int> followedUserIds)
+        public bool IsUserExists(int userId)
+        {
+            return _users.ContainsKey(userId);
+        }
+
+        public List<int> GetUsersFollowedByCurrentUser()
+        {
+            return _followers
+                .Where(x => x.Value.Contains(CurrentUserId))
+                .Select(x => x.Key)
+                .ToList();
+        }
+
+        private Tuple<int, Content> GetFollowedUsersTopRankedMovie(IEnumerable<int> followedUserIds)
         {
             Tuple<int, Content> recommendedMovie = null;
 

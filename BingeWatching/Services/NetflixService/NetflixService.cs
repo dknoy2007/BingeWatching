@@ -11,6 +11,7 @@ namespace BingeWatching.Services.NetflixService
         private const string BaseAddress = "https://api.reelgood.com/v1/";
         private const string Endpoint = "roulette/netflix";
 
+        // In case the program was a Web.Api service (and not a console app) I would have done it asynchronously with Task async/await
         public Content GetRandomContent(ContentKind kind)
         {
             try

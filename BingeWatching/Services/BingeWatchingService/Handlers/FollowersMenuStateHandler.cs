@@ -36,7 +36,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             {
                 case MenuState.Follow:
                 case MenuState.UnFollow:
-                    UserFollowOrUnFollow();
+                    FollowOrUnFollowUser();
                     break;
                 case MenuState.Followers:
                     GetFollowers();
@@ -51,7 +51,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
         {
             Console.WriteLine("\n");
 
-            var followers = _repository.GetFollowers();
+            var followers = _repository.GetCurrentUserFollowers();
 
             if (followers == null || !followers.Any())
             {
@@ -73,7 +73,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             Console.WriteLine($"userId={followers[0]} is following you");
         }
 
-        private void UserFollowOrUnFollow()
+        private void FollowOrUnFollowUser()
         {
             Console.WriteLine("\n");
 
@@ -82,7 +82,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
                 return;
             }
 
-            var isFollowing = _repository.IsFollowing(userId);
+            var isFollowing = _repository.IsFollowingUser(userId);
 
             switch (isFollowing)
             {
@@ -97,12 +97,12 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
 
             if (MenuState == MenuState.Follow)
             {
-                _repository.Follow(userId);
+                _repository.FollowUser(userId);
                 Console.WriteLine($"\nYou are now following userId={userId}");
                 return;
             }
 
-            _repository.UnFollow(userId);
+            _repository.UnFollowUser(userId);
             Console.WriteLine($"\nYou're not following user id={userId} anymore");
         }
 
@@ -126,7 +126,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
                     continue;
                 }
 
-                var userToFollowExist = _repository.UserExists(userIdTo);
+                var userToFollowExist = _repository.IsUserExists(userIdTo);
 
                 if (!userToFollowExist)
                 {

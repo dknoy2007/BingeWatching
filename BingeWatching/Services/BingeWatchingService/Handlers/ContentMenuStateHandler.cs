@@ -9,11 +9,9 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
     public class ContentMenuStateHandler : IMenuStateHandler
     {
         private readonly ContentKindHandler _handler;
-        private readonly IBingeWatchingRepository _repository;
-
+        
         public ContentMenuStateHandler(IBingeWatchingRepository repository)
         {
-            _repository = repository;
             _handler = new ContentKindHandler(repository);
         }
 

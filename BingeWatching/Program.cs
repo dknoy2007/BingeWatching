@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using BingeWatching.Services.BingeWatchingService.Menu;
 
 namespace BingeWatching
