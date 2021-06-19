@@ -6,5 +6,6 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers.Interfaces
     {
         bool CanHandle(MenuState menuState);
         void Handle();
+        MenuState MenuState { get; set; }
     }
 }

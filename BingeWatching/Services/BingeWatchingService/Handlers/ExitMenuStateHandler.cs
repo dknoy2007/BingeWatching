@@ -12,6 +12,8 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             return menuState == MenuState.Exit;
         }
 
+        public MenuState MenuState { get; set; }
+
         public void Handle()
         {
             ExitBingeWatchingMenuGracefully();

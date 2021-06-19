@@ -35,7 +35,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
                     HandleMovieRecommendation();
                     break;
                 default:
-                    Console.WriteLine($"Invalid content kind {contentKind}"); 
+                    Console.WriteLine($"\nInvalid content kind {contentKind}"); 
                     break;
             }
         }
@@ -130,14 +130,25 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
 
         private void HandleMovieRecommendation()
         {
-            var recommendedMovie = _repository.GetMovieRecommendation();
+            var followedUserIds = _repository.GetFollowedUsers();
 
-            if (recommendedMovie == null)
+            if (!followedUserIds.Any())
             {
+                Console.WriteLine("\nYou are not following anybody");
                 return;
             }
 
-            Console.WriteLine($"Movie recommended by userId={recommendedMovie.Item1}");
+            var recommendedMovie = _repository.GetMovieRecommendation(followedUserIds);
+
+            if (recommendedMovie == null)
+            {
+                Console.WriteLine("\nSorry, there are no movie recommendations, or you've probably already watched all recommended movies");
+                return;
+            }
+
+            Console.WriteLine($"\nMovie recommended by userId={recommendedMovie.Item1}:");
+            Console.WriteLine("------------------------------");
+
             Console.WriteLine($"{recommendedMovie.Item2.ToString(false)}");
         }
     }

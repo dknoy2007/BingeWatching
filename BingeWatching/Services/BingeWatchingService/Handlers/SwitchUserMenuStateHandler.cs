@@ -18,6 +18,8 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             return menuState == MenuState.SwitchUser;
         }
 
+        public MenuState MenuState { get; set; }
+
         public void Handle()
         {
             Console.WriteLine("\n\nSwitching user.\n");

@@ -49,6 +49,8 @@ namespace BingeWatching.Services.BingeWatchingService.Menu
                     Environment.Exit(0);
                 }
 
+                handler.MenuState = menuState;
+
                 handler.Handle();
             }
         }

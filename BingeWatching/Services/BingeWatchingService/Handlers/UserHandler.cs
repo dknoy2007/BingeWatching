@@ -21,7 +21,7 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
 
                 if (!int.TryParse(Console.ReadLine(), out var userId) || userId <= 0)
                 {
-                    Console.WriteLine($"\nInvalid userId: must be a whole number greater than 0\n");
+                    Console.WriteLine("\nInvalid userId: must be a whole number greater than 0\n");
                     continue;
                 }
 

@@ -22,6 +22,8 @@ namespace BingeWatching.Services.BingeWatchingService.Handlers
             return menuState == MenuState.Content;
         }
 
+        public MenuState MenuState { get; set; }
+
         public void Handle()
         {
             var contentKind = GetContentKind();

@@ -20,7 +20,7 @@ namespace BingeWatching.Models
         public float? Rating { get; set; }
 
         [JsonIgnore]
-        public int? Rank { get; set; }
+        public int Rank { get; set; }
 
         public string ToString(bool printId = true)
         {
@@ -28,17 +28,18 @@ namespace BingeWatching.Models
 
             if (printId)
             {
-                sb.AppendLine($"Id:\n{Id}");
-                sb.AppendLine();
+                sb.AppendLine($"Id: {Id}");
             }
 
-            sb.AppendLine($"Title:\n{Title}");
-            sb.AppendLine();
-            sb.AppendLine($"Overview:\n{Overview}");
-            sb.AppendLine();
-            sb.AppendLine($"Rating:\n{Rating}");
-            sb.AppendLine();
-            sb.AppendLine($"UserRank:\n{Rank}");
+            sb.AppendLine($"Title: {Title}");
+            sb.AppendLine($"Overview: {Overview}");
+
+            if (Rating.HasValue)
+            {
+                sb.AppendLine($"Rating: {Rating}");
+            }
+            
+            sb.AppendLine($"UserRank: {Rank}");
 
             return sb.ToString();
         }

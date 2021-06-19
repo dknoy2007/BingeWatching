@@ -10,7 +10,7 @@ namespace BingeWatching.Repository
     public class BingeWatchingRepository : IBingeWatchingRepository
     {
         private readonly Dictionary<int, Dictionary<string, Content>> _users;
-        private readonly Dictionary<int, HashSet<int>> _followers;
+        private readonly Dictionary<int, List<int>> _followers;
         private readonly Dictionary<int, HashSet<string>> _recommendations;
         
         public BingeWatchingRepository()
@@ -18,9 +18,11 @@ namespace BingeWatching.Repository
             CurrentUserId = 0;
 
             _users = new Dictionary<int, Dictionary<string, Content>>();
-            _followers = new Dictionary<int, HashSet<int>>();
+            _followers = new Dictionary<int, List<int>>();
             _recommendations = new Dictionary<int, HashSet<string>>();
         }
+
+        public int CurrentUserId { get; private set; }
 
         public bool GetOrCreateUser(int userId)
         {
@@ -46,14 +48,9 @@ namespace BingeWatching.Repository
 
         public List<Content> GetContentHistory()
         {
-            if (_users[CurrentUserId].Any())
-            {
-                return _users[CurrentUserId].Values.ToList();
-            }
-                
-            Console.WriteLine($"User id={CurrentUserId} has no content history");
-
-            return null;
+            return _users[CurrentUserId].Any()
+                ? _users[CurrentUserId].Values.ToList()
+                : null;
         }
 
         public void UpdateContentRank(string contentId, int rank)
@@ -61,118 +58,59 @@ namespace BingeWatching.Repository
             _users[CurrentUserId][contentId].Rank = rank;
         }
 
-        public void Follow(int userToFollowId)
+        public void Follow(int userId)
         {
-            if (!UserExists(userToFollowId))
+            if (!_followers.ContainsKey(userId))
             {
-                Console.WriteLine($"User id={userToFollowId} to follow doesn't exist");
-                return;
-            }
-
-            if (_followers.ContainsKey(userToFollowId) && _followers[userToFollowId].Contains(CurrentUserId))
-            {
-                Console.WriteLine($"You're already following user id={userToFollowId}");
-                return;
-            }
-
-            if (!_followers.ContainsKey(userToFollowId))
-            {
-                _followers.Add(userToFollowId, new HashSet<int>{ CurrentUserId });
+                _followers.Add(userId, new List<int>{ CurrentUserId });
             }
             else
             {
-                _followers[userToFollowId].Add(CurrentUserId);
+                _followers[userId].Add(CurrentUserId);
             }
-
-            Console.WriteLine($"You're now following user id={userToFollowId}");
         }
 
-        public void UnFollow(int userToFollowId)
+        public void UnFollow(int userId)
         {
-            if (!UserExists(userToFollowId))
-            {
-                Console.WriteLine($"User id={userToFollowId} to follow doesn't exist");
-                return;
-            }
-
-            if (!_followers.ContainsKey(userToFollowId) || !_followers[userToFollowId].Contains(CurrentUserId))
-            {
-                Console.WriteLine($"You weren't following user id={userToFollowId}");
-                return;
-            }
-
-            _followers[userToFollowId].Remove(CurrentUserId);
-
-            Console.WriteLine($"You're not following user id={userToFollowId} anymore");
+            _followers[userId].Remove(CurrentUserId);
         }
 
-        public HashSet<int> GetFollowers()
+        public bool IsFollowing(int userId)
         {
-            if (_followers.ContainsKey(CurrentUserId))
-            {
-                return _followers[CurrentUserId];
-            }
-
-            Console.WriteLine("You do not have any followers");
-
-            return null;
+            return _followers.ContainsKey(userId) && _followers[userId].Contains(CurrentUserId);
         }
 
-        public Tuple<int, Content> GetMovieRecommendation()
+        public List<int> GetFollowers()
         {
-            return GetFollowedUsersMovieRecommendation();
+            return _followers.ContainsKey(CurrentUserId) 
+                ? _followers[CurrentUserId] 
+                : null;
         }
 
-        private int CurrentUserId { get; set; }
+        public Tuple<int, Content> GetMovieRecommendation(List<int> followedUserIds)
+        {
+            return GetFollowedUsersMovieRecommendation(followedUserIds);
+        }
 
-        private bool UserExists(int userId)
+        public bool UserExists(int userId)
         {
             return _users.ContainsKey(userId);
         }
 
-        private Tuple<int, Content> GetFollowedUsersMovieRecommendation()
+        public List<int> GetFollowedUsers()
         {
-            var followedUserIds = GetFollowedUsers();
+            return _followers
+                .Where(x => x.Value.Contains(CurrentUserId))
+                .Select(x => x.Key)
+                .ToList();
+        }
 
-            if (!followedUserIds.Any())
-            {
-                Console.WriteLine($"Sorry, you're not following anybody");
-                return null;
-            }
-
-            Tuple<int, Content> recommendedMovie = null;
-
-            foreach (
-                var userRecommendedMovie 
-                in from followedUserId 
-                    in followedUserIds 
-                where _users[followedUserId].Any() 
-                select GetFollowedUserMovieRecommendation(followedUserId) 
-                into userRecommendedMovie 
-                where userRecommendedMovie.Item2 != null 
-                select userRecommendedMovie)
-            {
-                if (recommendedMovie == null && 
-                    !_recommendations.ContainsKey(CurrentUserId) ||
-                    !_recommendations[CurrentUserId].Contains(userRecommendedMovie.Item2.Id))
-                {
-                    recommendedMovie = userRecommendedMovie;
-                    continue;
-                }
-
-                if (recommendedMovie != null &&
-                    userRecommendedMovie.Item2.Id != recommendedMovie.Item2.Id &&
-                    userRecommendedMovie.Item2.Rating > recommendedMovie.Item2.Rating &&
-                    !_recommendations.ContainsKey(CurrentUserId) ||
-                    !_recommendations[CurrentUserId].Contains(userRecommendedMovie.Item2.Id))
-                {
-                    recommendedMovie = userRecommendedMovie;
-                }
-            }
+        private Tuple<int, Content> GetFollowedUsersMovieRecommendation(List<int> followedUserIds)
+        {
+            var recommendedMovie = GetFollowedUsersTopRankedMovie(followedUserIds);
 
             if (recommendedMovie == null)
             {
-                Console.WriteLine("Sorry, you've already watched all recommended movies");
                 return null;
             }
 
@@ -182,16 +120,61 @@ namespace BingeWatching.Repository
             }
 
             _recommendations[CurrentUserId].Add(recommendedMovie.Item2.Id);
+            
+            // we treat recommendation as if the current user is watching it, so it is added to its already watched content list
+            AddContent(recommendedMovie.Item2);
 
             return recommendedMovie;
         }
 
-        private List<int> GetFollowedUsers()
+        private Tuple<int, Content> GetFollowedUsersTopRankedMovie(List<int> followedUserIds)
         {
-            return _followers
-                    .Where(x => x.Value.Contains(CurrentUserId))
-                    .Select(x => x.Key)
-                    .ToList();
+            Tuple<int, Content> recommendedMovie = null;
+
+            foreach (
+                var userRecommendedMovie
+                in from followedUserId
+                    in followedUserIds
+                where _users[followedUserId].Any()
+                select GetFollowedUserMovieRecommendation(followedUserId)
+                into userRecommendedMovie
+                where userRecommendedMovie.Item2 != null
+                select userRecommendedMovie)
+            {
+                // check: 
+                // 1. current user has yet to contain this content already
+                // 2. it's the first followed user recommendation
+                // 3. this content was yet to be recommended to current user
+                if (!_users[CurrentUserId].Any() ||
+                    !_users[CurrentUserId].ContainsKey(userRecommendedMovie.Item2.Id) &&
+                    recommendedMovie == null &&
+                    !_recommendations.Any() ||
+                    !_recommendations.ContainsKey(CurrentUserId) ||
+                    !_recommendations[CurrentUserId].Contains(userRecommendedMovie.Item2.Id))
+                {
+                    recommendedMovie = userRecommendedMovie;
+                    continue;
+                }
+
+                // check: 
+                // 1. current user has yet to contain this content already
+                // 2. it's not the first followed user recommendation
+                // 3. it's different and ranked higher than the current top ranked content that was found
+                // 3. this content was yet to be recommended to current user
+                if (!_users[CurrentUserId].Any() ||
+                    !_users[CurrentUserId].ContainsKey(userRecommendedMovie.Item2.Id) &&
+                    recommendedMovie != null &&
+                    userRecommendedMovie.Item2.Id != recommendedMovie.Item2.Id &&
+                    userRecommendedMovie.Item2.Rating > recommendedMovie.Item2.Rating &&
+                    !_recommendations.Any() ||
+                    !_recommendations.ContainsKey(CurrentUserId) ||
+                    !_recommendations[CurrentUserId].Contains(userRecommendedMovie.Item2.Id))
+                {
+                    recommendedMovie = userRecommendedMovie;
+                }
+            }
+
+            return recommendedMovie;
         }
 
         private Tuple<int, Content> GetFollowedUserMovieRecommendation(int followedUserId)
